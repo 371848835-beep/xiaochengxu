@@ -51,15 +51,11 @@ module.exports = async (req, res) => {
       });
     }
 
-    // 提取 APPID (从 bucket 名字中，如 watermark-out-1309163396)
-    const appIdMatch = config.bucket.match(/-(\d+)$/);
-    const appId = appIdMatch ? appIdMatch[1] : '';
-
     const credential = await getCredentialAsync({
       secretId: config.secretId,
       secretKey: config.secretKey,
       durationSeconds: config.durationSeconds,
-      // 使用精确的 policy，避免 Vercel 环境下的授权冲突
+      // 终极极简版 policy：使用通配符，避免任何资源路径拼接导致的鉴权错误
       policy: {
         version: "2.0",
         statement: [
@@ -67,7 +63,7 @@ module.exports = async (req, res) => {
             action: config.allowActions,
             effect: "allow",
             resource: [
-              `qcs::cos:${config.region}:uid/${appId}:${config.bucket}/${config.allowPrefix}`
+              "qcs::cos:*:*:*/*"
             ]
           }
         ]

@@ -63,22 +63,20 @@ module.exports = async (req, res) => {
     const expiredTime = credential.expiredTime || (startTime + config.durationSeconds);
     const keyTime = `${startTime};${expiredTime}`;
 
-    // 生成 POST Object 签名
-    const policyObj = {
-      "expiration": new Date(expiredTime * 1000).toISOString(),
-      "conditions": [
-        {"q-sign-algorithm": "sha1"},
-        {"q-ak": tmpSecretId},
-        {"q-sign-time": keyTime}
-      ]
-    };
-    
-    const policyStr = JSON.stringify(policyObj);
-    const policyBase64 = Buffer.from(policyStr).toString('base64');
-    
+    // 使用更简单可靠的 Authorization Header 签名方案 (针对 POST /)
     const signKey = crypto.createHmac('sha1', tmpSecretKey).update(keyTime).digest('hex');
-    const stringToSign = crypto.createHash('sha1').update(policyBase64).digest('hex');
+    const httpMethod = 'post';
+    const httpUri = '/';
+    const httpParameters = '';
+    const httpHeaders = '';
+    
+    const httpString = `${httpMethod}\n${httpUri}\n${httpParameters}\n${httpHeaders}\n`;
+    const sha1edHttpString = crypto.createHash('sha1').update(httpString).digest('hex');
+    
+    const stringToSign = `sha1\n${keyTime}\n${sha1edHttpString}\n`;
     const signature = crypto.createHmac('sha1', signKey).update(stringToSign).digest('hex');
+    
+    const authorization = `q-sign-algorithm=sha1&q-ak=${tmpSecretId}&q-sign-time=${keyTime}&q-key-time=${keyTime}&q-header-list=&q-url-param-list=&q-signature=${signature}`;
 
     return res.status(200).json({
       credentials: creds,
@@ -86,14 +84,8 @@ module.exports = async (req, res) => {
       expiredTime: expiredTime,
       bucket: config.bucket,
       region: config.region,
-      postData: {
-        'q-sign-algorithm': 'sha1',
-        'q-ak': tmpSecretId,
-        'q-key-time': keyTime,
-        'q-signature': signature,
-        'policy': policyBase64,
-        'x-cos-security-token': sessionToken
-      }
+      authorization: authorization,
+      sessionToken: sessionToken
     });
   } catch (error) {
     console.error('STS Error:', error);

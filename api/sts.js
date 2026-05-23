@@ -65,7 +65,7 @@ module.exports = async (req, res) => {
     console.error('STS Error:', error);
     return res.status(500).json({
       error: '获取临时凭证失败',
-      detail: error,
+      detail: JSON.stringify(error, Object.getOwnPropertyNames(error)),
       message: error && error.message ? error.message : '',
       code: error && error.code ? error.code : '',
       name: error && error.name ? error.name : '',

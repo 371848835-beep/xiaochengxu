@@ -55,7 +55,7 @@ module.exports = async (req, res) => {
       secretId: config.secretId,
       secretKey: config.secretKey,
       durationSeconds: config.durationSeconds,
-      // 终极极简版 policy：使用通配符，避免任何资源路径拼接导致的鉴权错误
+      // 直接写死真实的资源路径，避免任何动态拼接错误
       policy: {
         version: "2.0",
         statement: [
@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
             action: config.allowActions,
             effect: "allow",
             resource: [
-              "qcs::cos:*:*:*/*"
+              "qcs::cos:ap-guangzhou:uid/1309163396:watermark-out-1309163396/uploads/*"
             ]
           }
         ]

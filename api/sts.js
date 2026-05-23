@@ -12,6 +12,17 @@ function getCredentialAsync(options) {
   });
 }
 
+function safeErrorDetail(error) {
+  if (!error) return '';
+  if (typeof error === 'string') return error;
+  if (error.message) return error.message;
+  try {
+    return JSON.stringify(error);
+  } catch (e) {
+    return String(error);
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -65,10 +76,9 @@ module.exports = async (req, res) => {
     console.error('STS Error:', error);
     return res.status(500).json({
       error: '获取临时凭证失败',
-      detail: JSON.stringify(error, Object.getOwnPropertyNames(error)),
-      message: error && error.message ? error.message : '',
+      detail: safeErrorDetail(error),
       code: error && error.code ? error.code : '',
       name: error && error.name ? error.name : '',
-      stack: error && error.stack ? error.stack : ''
     });
   }
+};

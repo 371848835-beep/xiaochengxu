@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI视频去水印助手</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col font-sans">
+  
+  <header class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <h1 class="text-2xl font-bold text-blue-600 flex items-center">
+        <svg class="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        AI视频去水印助手
+      </h1>
+      <div class="text-sm text-gray-500">快速 · 无广告 · 安全</div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col">
+    
+    <!-- Step 1: Upload -->
+    <div id="upload-section" class="flex-grow flex flex-col justify-center items-center">
+      <div class="w-full max-w-2xl bg-white p-8 rounded-2xl shadow-sm border border-dashed border-gray-300 text-center hover:bg-gray-50 transition cursor-pointer" id="drop-zone">
+        <input type="file" id="file-input" class="hidden" accept="video/mp4,video/x-m4v,video/*">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+        <p class="text-xl text-gray-700 font-medium mb-2">点击或拖拽视频文件到此处</p>
+        <p class="text-sm text-gray-500 mb-4">支持 MP4, MOV 等格式，最大支持 500MB</p>
+        <button class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition" onclick="document.getElementById('file-input').click()">选择视频</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Edit -->
+    <div id="edit-section" class="hidden w-full flex flex-col md:flex-row gap-6">
+      <div class="flex-grow bg-black rounded-xl overflow-hidden relative shadow-lg flex items-center justify-center" id="video-container" style="min-h: 400px;">
+        <video id="preview-video" class="w-full max-h-[70vh] object-contain" controls></video>
+        <!-- Overlay for drawing boxes -->
+        <canvas id="selection-canvas" class="absolute inset-0 w-full h-full cursor-crosshair z-10 pointer-events-none"></canvas>
+      </div>
+      
+      <div class="w-full md:w-80 bg-white p-6 rounded-xl shadow-sm border flex flex-col gap-6">
+        <div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">框选区域</h3>
+          <p class="text-sm text-gray-500 mb-4">点击“绘制选区”，在左侧视频画面上拖拽，框选需要去除的水印或字幕区域。</p>
+          <div class="flex gap-2 mb-4">
+            <button id="btn-draw" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition">开启绘制</button>
+            <button id="btn-clear" class="flex-1 bg-gray-50 text-gray-600 border border-gray-200 py-2 rounded-lg text-sm font-medium hover:bg-gray-100 transition">清除全部</button>
+          </div>
+          <ul id="box-list" class="space-y-2 text-sm max-h-40 overflow-y-auto">
+            <!-- Selected boxes will appear here -->
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="text-lg font-bold text-gray-800 mb-2">处理强度</h3>
+          <select id="intensity" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border">
+            <option value="low">低 (保留更多细节)</option>
+            <option value="medium" selected>中 (平衡)</option>
+            <option value="high">高 (强力去除)</option>
+          </select>
+        </div>
+
+        <div class="mt-auto pt-4 border-t">
+          <button id="btn-process" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow hover:bg-blue-700 transition flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed">
+            开始处理视频
+          </button>
+          <button id="btn-back" class="w-full mt-2 text-gray-500 text-sm hover:text-gray-700 py-2 transition">返回重新上传</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Result -->
+    <div id="result-section" class="hidden flex-grow flex flex-col justify-center items-center w-full">
+      <div class="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-sm border text-center">
+        
+        <div id="processing-view">
+          <h2 class="text-2xl font-bold mb-4">视频处理中...</h2>
+          <p class="text-gray-500 mb-8 text-sm">您可以关闭页面，稍后回来查看结果，或在此耐心等待。</p>
+          <div class="w-full bg-gray-200 rounded-full h-4 mb-4 overflow-hidden">
+            <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <p id="progress-text" class="text-blue-600 font-bold">0%</p>
+        </div>
+
+        <div id="finished-view" class="hidden">
+          <div class="w-16 h-16 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          </div>
+          <h2 class="text-2xl font-bold mb-6">处理完成！</h2>
+          <video id="result-video" class="w-full max-h-96 bg-black rounded-lg mb-6" controls></video>
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a id="btn-download" href="#" download="processed_video.mp4" class="bg-blue-600 text-white px-8 py-3 rounded-lg shadow hover:bg-blue-700 transition font-bold flex items-center justify-center">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              下载视频
+            </a>
+            <button id="btn-process-another" class="bg-gray-100 text-gray-700 px-8 py-3 rounded-lg shadow hover:bg-gray-200 transition font-bold">处理其他视频</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t mt-auto py-6">
+    <div class="max-w-7xl mx-auto px-4 text-center text-sm text-gray-400">
+      <p>免责声明：本工具仅供个人学习使用，请勿用于商业用途或侵犯他人版权。</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

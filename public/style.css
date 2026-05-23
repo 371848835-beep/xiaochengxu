@@ -1,0 +1,9 @@
+/* 额外的一些小样式 */
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#selection-canvas {
+  /* 确保canvas可以正确覆盖在video上方，但不阻挡video controls，除非处于绘制模式 */
+}

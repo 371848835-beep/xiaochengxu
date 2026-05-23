@@ -1,0 +1,13 @@
+{
+  "name": "ai-video-watermark",
+  "version": "1.0.0",
+  "description": "AI视频去水印助手",
+  "scripts": {
+    "start": "node api/process.js"
+  },
+  "dependencies": {
+    "qcloud-cos-sts": "^3.1.3",
+    "tencentcloud-sdk-nodejs": "^4.0.0",
+    "uuid": "^9.0.0"
+  }
+}

@@ -43,6 +43,9 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error("STS Error:", error);
-    res.status(500).json({ error: '获取临时凭证失败' });
+    res.status(500).json({
+      error: '获取临时凭证失败',
+      message: error && error.message ? error.message : String(error),
+      code: error && error.code ? error.code : ''
+    });
   }
-};
